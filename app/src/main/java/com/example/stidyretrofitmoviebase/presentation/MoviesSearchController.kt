@@ -13,13 +13,13 @@ import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.stidyretrofitmoviebase.R
-import com.example.stidyretrofitmoviebase.domain.Creator
 import com.example.stidyretrofitmoviebase.domain.api.MoviesInteractor
 import com.example.stidyretrofitmoviebase.domain.models.Movie
+import com.example.stidyretrofitmoviebase.domain.utill.Creator
 import com.example.stidyretrofitmoviebase.ui.moves.MoviesAdapter
 
 class MoviesSearchController(private val activity: Activity, private val adapter: MoviesAdapter) {
-    private val moviesInteractor = Creator.provideMoviesInteractor()
+    private val moviesInteractor = Creator.provideMoviesInteractor(activity)
 
     companion object {
         private const val SEARCH_DEBOUNCE_DELAY = 2000L
@@ -43,22 +43,29 @@ class MoviesSearchController(private val activity: Activity, private val adapter
             moviesList.visibility = View.GONE
             progressBar.visibility = View.VISIBLE
 
-            moviesInteractor.searchMovies(queryInput.text.toString(), object : MoviesInteractor.MoviesConsumer{
-                override fun consume(foundMovies: List<Movie>) {
-                    handler.post {
-                        progressBar.visibility = View.GONE
-                        movies.clear()
-                        movies.addAll(foundMovies)
-                        moviesList.visibility = View.VISIBLE
-                        adapter.notifyDataSetChanged()
-                        if (movies.isEmpty()){
-                            showMessage(activity.getString(R.string.nothing_found), "")
-                        } else {
-                            hideMessage()
+            moviesInteractor.searchMovies(
+                queryInput.text.toString(),
+                object : MoviesInteractor.MoviesConsumer {
+                    override fun consume(foundMovies: List<Movie>?, errorMessage: String?) {
+                        handler.post {
+                            progressBar.visibility = View.GONE
+                            if (foundMovies != null) {
+                                movies.clear()
+                                movies.addAll(foundMovies)
+                                adapter.notifyDataSetChanged()
+                                moviesList.visibility = View.VISIBLE
+                            }
+                            if (errorMessage != null) {
+                                showMessage(
+                                    activity.getString(R.string.something_went_wrong),
+                                    errorMessage
+                                )
+                            } else if (movies.isEmpty()) {
+                                showMessage(activity.getString(R.string.nothing_found), "")
+                            } else hideMessage()
                         }
                     }
-                }
-            })
+                })
         }
     }
 
@@ -94,7 +101,8 @@ class MoviesSearchController(private val activity: Activity, private val adapter
 
         adapter.movies = movies
 
-        moviesList.layoutManager = LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false)
+        moviesList.layoutManager =
+            LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false)
         moviesList.adapter = adapter
 
         queryInput.addTextChangedListener(object : TextWatcher {

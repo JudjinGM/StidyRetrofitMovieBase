@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import com.example.stidyretrofitmoviebase.R
-import com.example.stidyretrofitmoviebase.domain.Creator
+import com.example.stidyretrofitmoviebase.domain.utill.Creator
 import com.example.stidyretrofitmoviebase.ui.poster.PosterActivity
 
 class MoviesActivity : Activity() {
