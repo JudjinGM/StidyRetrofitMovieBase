@@ -2,19 +2,25 @@ package com.example.stidyretrofitmoviebase.domain.impl
 
 import com.example.stidyretrofitmoviebase.domain.api.MoviesInteractor
 import com.example.stidyretrofitmoviebase.domain.api.MoviesRepository
-import com.example.stidyretrofitmoviebase.domain.utill.Resource
-import java.util.concurrent.Executors.*
+import com.example.stidyretrofitmoviebase.domain.models.Movie
+import com.example.stidyretrofitmoviebase.domain.utill.HandleResult
+import java.util.concurrent.Executors.newCachedThreadPool
 
 class MoviesInteractorImpl(private val repository: MoviesRepository) : MoviesInteractor {
 
     private val executor = newCachedThreadPool()
-
     override fun searchMovies(expression: String, consumer: MoviesInteractor.MoviesConsumer) {
         executor.execute {
-            when(val resource = repository.searchMovies(expression)) {
-                is Resource.Success -> { consumer.consume(resource.data, null) }
-                is Resource.Error -> { consumer.consume(null, resource.message) }
-            }
+                repository.searchMovies(expression).handle(object : HandleResult<List<Movie>> {
+                    override fun handleSuccess(data: List<Movie>?) {
+                        consumer.consume(data, null)
+                    }
+
+                    override fun handleError(message: String?, data: List<Movie>?) {
+                        consumer.consume(null, message)
+                    }
+
+                })
         }
     }
 }
