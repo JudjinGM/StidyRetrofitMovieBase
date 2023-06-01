@@ -3,7 +3,7 @@ package com.example.stidyretrofitmoviebase.ui.poster
 import android.app.Activity
 import android.os.Bundle
 import com.example.stidyretrofitmoviebase.R
-import com.example.stidyretrofitmoviebase.domain.utill.Creator
+import com.example.stidyretrofitmoviebase.utill.Creator
 
 class PosterActivity : Activity() {
 

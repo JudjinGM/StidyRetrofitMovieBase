@@ -1,4 +1,4 @@
-package com.example.stidyretrofitmoviebase.domain.utill
+package com.example.stidyretrofitmoviebase.utill
 
 sealed class Resource<T>(val data: T? = null, val message: String? = null) {
     abstract fun handle(handleResult: HandleResult<T>)

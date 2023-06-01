@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.stidyretrofitmoviebase.R
 import com.example.stidyretrofitmoviebase.domain.api.MoviesInteractor
 import com.example.stidyretrofitmoviebase.domain.models.Movie
-import com.example.stidyretrofitmoviebase.domain.utill.Creator
+import com.example.stidyretrofitmoviebase.utill.Creator
 import com.example.stidyretrofitmoviebase.ui.moves.MoviesAdapter
 
 class MoviesSearchController(private val activity: Activity, private val adapter: MoviesAdapter) {

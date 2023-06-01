@@ -1,4 +1,4 @@
-package com.example.stidyretrofitmoviebase.domain.utill
+package com.example.stidyretrofitmoviebase.utill
 
 import android.app.Activity
 import android.content.Context
