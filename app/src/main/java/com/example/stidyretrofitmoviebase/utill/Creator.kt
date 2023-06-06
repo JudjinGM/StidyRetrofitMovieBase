@@ -1,15 +1,14 @@
-package com.example.stidyretrofitmoviebase.domain.utill
+package com.example.stidyretrofitmoviebase.utill
 
-import android.app.Activity
 import android.content.Context
 import com.example.stidyretrofitmoviebase.data.MoviesRepositoryImpl
 import com.example.stidyretrofitmoviebase.data.network.RetrofitNetworkClient
 import com.example.stidyretrofitmoviebase.domain.api.MoviesInteractor
 import com.example.stidyretrofitmoviebase.domain.api.MoviesRepository
 import com.example.stidyretrofitmoviebase.domain.impl.MoviesInteractorImpl
-import com.example.stidyretrofitmoviebase.presentation.MoviesSearchController
-import com.example.stidyretrofitmoviebase.presentation.PosterController
-import com.example.stidyretrofitmoviebase.ui.moves.MoviesAdapter
+import com.example.stidyretrofitmoviebase.presentation.movies.MoviesSearchPresenter
+import com.example.stidyretrofitmoviebase.presentation.poster.PosterPresenter
+import com.example.stidyretrofitmoviebase.presentation.poster.PosterView
 
 object Creator {
 
@@ -21,11 +20,13 @@ object Creator {
         return MoviesInteractorImpl(getMoviesRepository(context))
     }
 
-    fun provideMoviesSearchController(activity: Activity, adapter: MoviesAdapter): MoviesSearchController {
-        return MoviesSearchController(activity, adapter)
+    fun provideMoviesSearchPresenter(
+        context: Context
+    ): MoviesSearchPresenter {
+        return MoviesSearchPresenter(context)
     }
 
-    fun providePosterController(activity: Activity): PosterController{
-        return PosterController(activity)
+    fun providePosterController(view: PosterView, imageUrl: String): PosterPresenter {
+        return PosterPresenter(view, imageUrl)
     }
 }

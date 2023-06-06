@@ -1,4 +1,4 @@
-package com.example.stidyretrofitmoviebase.ui.moves
+package com.example.stidyretrofitmoviebase.ui.movies
 
 import android.view.LayoutInflater
 import android.view.ViewGroup

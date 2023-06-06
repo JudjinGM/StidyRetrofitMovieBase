@@ -4,7 +4,7 @@ import com.example.stidyretrofitmoviebase.data.dto.MoviesSearchRequest
 import com.example.stidyretrofitmoviebase.data.dto.MoviesSearchResponse
 import com.example.stidyretrofitmoviebase.domain.api.MoviesRepository
 import com.example.stidyretrofitmoviebase.domain.models.Movie
-import com.example.stidyretrofitmoviebase.domain.utill.Resource
+import com.example.stidyretrofitmoviebase.utill.Resource
 
 class MoviesRepositoryImpl(private val networkClient: NetworkClient) : MoviesRepository {
     override fun searchMovies(expression: String): Resource<List<Movie>> {
