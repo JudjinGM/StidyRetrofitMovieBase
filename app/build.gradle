@@ -55,4 +55,6 @@ dependencies {
     implementation "com.github.moxy-community:moxy:$moxyVersion"
     implementation "com.github.moxy-community:moxy-android:$moxyVersion"
     kapt "com.github.moxy-community:moxy-compiler:$moxyVersion"
+
+    implementation 'androidx.core:core-ktx:1.9.0'
 }

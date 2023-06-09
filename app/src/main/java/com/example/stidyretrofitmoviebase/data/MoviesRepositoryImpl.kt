@@ -1,12 +1,16 @@
 package com.example.stidyretrofitmoviebase.data
 
+import LocalStorage
 import com.example.stidyretrofitmoviebase.data.dto.MoviesSearchRequest
 import com.example.stidyretrofitmoviebase.data.dto.MoviesSearchResponse
 import com.example.stidyretrofitmoviebase.domain.api.MoviesRepository
 import com.example.stidyretrofitmoviebase.domain.models.Movie
 import com.example.stidyretrofitmoviebase.utill.Resource
 
-class MoviesRepositoryImpl(private val networkClient: NetworkClient) : MoviesRepository {
+class MoviesRepositoryImpl(
+    private val networkClient: NetworkClient,
+    private val localStorage: LocalStorage
+) : MoviesRepository {
     override fun searchMovies(expression: String): Resource<List<Movie>> {
         val response = networkClient.doRequest(MoviesSearchRequest(expression))
         return when (response.resultCode) {
@@ -14,11 +18,27 @@ class MoviesRepositoryImpl(private val networkClient: NetworkClient) : MoviesRep
                 Resource.Error("Проверьте подключение к интернету")
             }
             200 -> {
-                Resource.Success((response as MoviesSearchResponse).results.map {
-                    Movie(it.id, it.resultType, it.image, it.title, it.description)
+                val stored = localStorage.getSavedFavorites()
+                Resource.Success((response as MoviesSearchResponse).results.map { it ->
+                    Movie(
+                        id = it.id,
+                        resultType = it.resultType,
+                        image = it.image,
+                        title = it.title,
+                        description = it.description,
+                        inFavorite = stored.contains((it.id))
+                    )
                 })
             }
             else -> Resource.Error("Ошибка сервера")
         }
+    }
+
+    override fun addMovieToFavorites(movies: Movie) {
+        localStorage.addToFavorites(movies.id)
+    }
+
+    override fun removeMovieFromFavorites(movie: Movie) {
+        localStorage.removeFromFavorites(movie.id)
     }
 }

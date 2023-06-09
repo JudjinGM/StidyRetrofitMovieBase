@@ -5,4 +5,7 @@ import com.example.stidyretrofitmoviebase.utill.Resource
 
 interface MoviesRepository {
     fun searchMovies(expression: String): Resource<List<Movie>>
+
+    fun addMovieToFavorites(movies: Movie)
+    fun removeMovieFromFavorites(movie: Movie)
 }

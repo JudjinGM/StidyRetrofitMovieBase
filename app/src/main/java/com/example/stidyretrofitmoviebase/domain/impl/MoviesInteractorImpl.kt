@@ -11,16 +11,24 @@ class MoviesInteractorImpl(private val repository: MoviesRepository) : MoviesInt
     private val executor = newCachedThreadPool()
     override fun searchMovies(expression: String, consumer: MoviesInteractor.MoviesConsumer) {
         executor.execute {
-                repository.searchMovies(expression).handle(object : HandleResult<List<Movie>> {
-                    override fun handleSuccess(data: List<Movie>?) {
-                        consumer.consume(data, null)
-                    }
+            repository.searchMovies(expression).handle(object : HandleResult<List<Movie>> {
+                override fun handleSuccess(data: List<Movie>?) {
+                    consumer.consume(data, null)
+                }
 
-                    override fun handleError(message: String?, data: List<Movie>?) {
-                        consumer.consume(null, message)
-                    }
+                override fun handleError(message: String?, data: List<Movie>?) {
+                    consumer.consume(null, message)
+                }
 
-                })
+            })
         }
+    }
+
+    override fun addMoviesToFavorites(movie: Movie) {
+        repository.addMovieToFavorites(movie)
+    }
+
+    override fun removeMovieFromFavorites(movie: Movie) {
+        repository.removeMovieFromFavorites(movie)
     }
 }
