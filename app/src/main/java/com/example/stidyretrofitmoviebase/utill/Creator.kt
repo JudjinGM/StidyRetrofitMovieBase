@@ -7,8 +7,8 @@ import com.example.stidyretrofitmoviebase.data.network.RetrofitNetworkClient
 import com.example.stidyretrofitmoviebase.domain.api.MoviesInteractor
 import com.example.stidyretrofitmoviebase.domain.api.MoviesRepository
 import com.example.stidyretrofitmoviebase.domain.impl.MoviesInteractorImpl
-import com.example.stidyretrofitmoviebase.presentation.poster.PosterPresenter
-import com.example.stidyretrofitmoviebase.presentation.poster.PosterView
+import com.example.stidyretrofitmoviebase.presentation.movieDetail.PosterPresenter
+import com.example.stidyretrofitmoviebase.presentation.movieDetail.PosterView
 
 object Creator {
 

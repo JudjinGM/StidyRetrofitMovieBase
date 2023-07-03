@@ -4,8 +4,11 @@ import android.app.Application
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
-import androidx.lifecycle.*
-import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.stidyretrofitmoviebase.R
@@ -16,20 +19,10 @@ import com.example.stidyretrofitmoviebase.ui.movies.models.ToastState
 import com.example.stidyretrofitmoviebase.utill.Creator
 
 
-class MoviesSearchViewModel(application: Application) : AndroidViewModel(application) {
+class MoviesSearchViewModel(
+    private val moviesInteractor: MoviesInteractor, application: Application
+) : AndroidViewModel(application) {
 
-    companion object {
-        private const val SEARCH_DEBOUNCE_DELAY = 2000L
-        private val SEARCH_REQUEST_TOKEN = Any()
-
-        fun getViewModelFactory(): ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                MoviesSearchViewModel(this[APPLICATION_KEY] as Application)
-            }
-        }
-    }
-
-    private val moviesInteractor = Creator.provideMoviesInteractor(getApplication<Application>())
     private val handler = Handler(Looper.getMainLooper())
 
     private val toastState = MutableLiveData<ToastState>(ToastState.None)
@@ -112,8 +105,6 @@ class MoviesSearchViewModel(application: Application) : AndroidViewModel(applica
                             )
                         }
                     }
-
-
                 }
             })
         }
@@ -151,6 +142,20 @@ class MoviesSearchViewModel(application: Application) : AndroidViewModel(applica
                 stateLiveData.value = MoviesState.Content(currentState.movies.toMutableList().also {
                     it[movieIndex] = newMovie
                 })
+            }
+        }
+    }
+
+    companion object {
+        private const val SEARCH_DEBOUNCE_DELAY = 2000L
+        private val SEARCH_REQUEST_TOKEN = Any()
+
+        fun getViewModelFactory(): ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                MoviesSearchViewModel(
+                    moviesInteractor = Creator.provideMoviesInteractor(this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as Application),
+                    application = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as Application
+                )
             }
         }
     }

@@ -20,7 +20,7 @@ import com.example.stidyretrofitmoviebase.R
 import com.example.stidyretrofitmoviebase.domain.models.Movie
 import com.example.stidyretrofitmoviebase.ui.movies.models.MoviesState
 import com.example.stidyretrofitmoviebase.ui.movies.models.ToastState
-import com.example.stidyretrofitmoviebase.ui.poster.PosterActivity
+import com.example.stidyretrofitmoviebase.ui.movieDetail.DetailsActivity
 
 class MoviesActivity : ComponentActivity() {
     private var isClickAllowed = true
@@ -33,8 +33,9 @@ class MoviesActivity : ComponentActivity() {
     private val adapter = MoviesAdapter(object : MoviesAdapter.MovieClickListener {
         override fun onMovieClick(movie: Movie) {
             if (clickDebounce()) {
-                val intent = Intent(this@MoviesActivity, PosterActivity::class.java)
+                val intent = Intent(this@MoviesActivity, DetailsActivity::class.java)
                 intent.putExtra("poster", movie.image)
+                intent.putExtra("id", movie.id)
                 startActivity(intent)
             }
         }

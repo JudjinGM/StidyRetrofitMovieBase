@@ -1,5 +1,15 @@
 <resources>
-    <string name="app_name">StidyRetrofitMovieBase</string>
-    <string name="nothing_found">nothing_found</string>
-    <string name="something_went_wrong">something_went_wrong</string>
+    <string name="poster">ПОСТЕР</string>
+    <string name="details">О ФИЛЬМЕ</string>
+    <string name="rating">Рейтинг IMDb:</string>
+    <string name="year">Год:</string>
+    <string name="country">Страна:</string>
+    <string name="genre">Жанр:</string>
+    <string name="director">Режиссёр:</string>
+    <string name="writer">Сценарист:</string>
+    <string name="cast">В ролях:</string>
+    <string name="plot">Сюжет:</string>
+    <string name="something_went_wrong">Something went wrong</string>
+    <string name="nothing_found">Nothing found</string>
+    <string name="app_name">app name</string>
 </resources>
