@@ -3,7 +3,9 @@ package com.example.stidyretrofitmoviebase.domain.impl
 import com.example.stidyretrofitmoviebase.domain.api.MoviesInteractor
 import com.example.stidyretrofitmoviebase.domain.api.MoviesRepository
 import com.example.stidyretrofitmoviebase.domain.models.Movie
+import com.example.stidyretrofitmoviebase.domain.models.MovieCast
 import com.example.stidyretrofitmoviebase.domain.models.MovieDetail
+import com.example.stidyretrofitmoviebase.domain.models.Names
 import com.example.stidyretrofitmoviebase.utill.HandleResult
 import java.util.concurrent.Executors.newCachedThreadPool
 
@@ -38,6 +40,33 @@ class MoviesInteractorImpl(private val repository: MoviesRepository) : MoviesInt
         }
     }
 
+    override fun getMovieFullCast(id: String, consumer: MoviesInteractor.MovieCastConsumer) {
+        executor.execute {
+            repository.getMovieCast(id).handle(object : HandleResult<MovieCast> {
+                override fun handleSuccess(data: MovieCast?) {
+                    consumer.consume(data, null)
+                }
+
+                override fun handleError(message: String?, data: MovieCast?) {
+                    consumer.consume(null, message)
+                }
+            })
+        }
+    }
+
+    override fun searchNames(namesQuery: String, consumer: MoviesInteractor.NamesConsummer) {
+        executor.execute {
+            repository.getNames(namesQuery).handle(object : HandleResult<List<Names>> {
+                override fun handleSuccess(data: List<Names>?) {
+                    consumer.consume(data, null)
+                }
+
+                override fun handleError(message: String?, data: List<Names>?) {
+                    consumer.consume(null, message)
+                }
+            })
+        }
+    }
 
     override fun addMoviesToFavorites(movie: Movie) {
         repository.addMovieToFavorites(movie)

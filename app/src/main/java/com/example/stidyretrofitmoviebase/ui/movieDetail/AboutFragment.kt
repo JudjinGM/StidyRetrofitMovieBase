@@ -7,42 +7,60 @@ import android.view.ViewGroup
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
-import com.example.stidyretrofitmoviebase.databinding.FragmentDetailsBinding
+import androidx.navigation.fragment.findNavController
+import com.example.stidyretrofitmoviebase.R
+import com.example.stidyretrofitmoviebase.databinding.FragmentAboutBinding
 import com.example.stidyretrofitmoviebase.domain.models.MovieDetail
-import com.example.stidyretrofitmoviebase.presentation.model.AboutState
 import com.example.stidyretrofitmoviebase.presentation.movieDetail.AboutViewModel
+import com.example.stidyretrofitmoviebase.presentation.movieDetail.models.AboutState
+import com.example.stidyretrofitmoviebase.ui.movieCast.MovieCastFragment
+import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.core.parameter.parametersOf
 
 class AboutFragment : Fragment() {
 
-    private var _binding: FragmentDetailsBinding? = null
-    private val binding get() = _binding!!
-    private lateinit var viewModel: AboutViewModel
+    private var _binding: FragmentAboutBinding? = null
 
+    private val binding get() = _binding!!
     private lateinit var movieId: String
+
+    private val viewModel: AboutViewModel by viewModel {
+        parametersOf(movieId)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         movieId = requireArguments().getString(MOVIE_ID) ?: ""
+
     }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        _binding = FragmentDetailsBinding.inflate(inflater, container, false)
+    ): View {
+        _binding = FragmentAboutBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel = ViewModelProvider(
-            this, AboutViewModel.getViewModelFactory(movieId)
-        )[AboutViewModel::class.java]
 
         viewModel.observeState().observe(viewLifecycleOwner) {
             render(it)
+        }
+
+        setOnClicks()
+    }
+
+    private fun setOnClicks() {
+        binding.showCastButton.setOnClickListener {
+            findNavController().navigate(
+                R.id.action_detailsFragment_to_movieCastFragment,
+                MovieCastFragment.createArgs(movieId)
+            )
+
         }
     }
 
@@ -76,7 +94,7 @@ class AboutFragment : Fragment() {
 
 
     companion object {
-        const val MOVIE_ID = "id"
+        const val MOVIE_ID = "movie id"
         fun newInstance(movieId: String): AboutFragment {
             return AboutFragment().apply {
                 arguments = bundleOf(MOVIE_ID to movieId)

@@ -1,16 +1,11 @@
 package com.example.stidyretrofitmoviebase.presentation.movieDetail
 
-import android.app.Application
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.stidyretrofitmoviebase.domain.api.MoviesInteractor
 import com.example.stidyretrofitmoviebase.domain.models.MovieDetail
-import com.example.stidyretrofitmoviebase.presentation.model.AboutState
-import com.example.stidyretrofitmoviebase.utill.Creator
+import com.example.stidyretrofitmoviebase.presentation.movieDetail.models.AboutState
 
 class AboutViewModel(private val movieId: String, private val moviesInteractor: MoviesInteractor) :
     ViewModel() {
@@ -42,14 +37,4 @@ class AboutViewModel(private val movieId: String, private val moviesInteractor: 
         })
     }
 
-    companion object {
-        fun getViewModelFactory(movieId: String): ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                AboutViewModel(
-                    movieId,
-                    moviesInteractor = Creator.provideMoviesInteractor(this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as Application)
-                )
-            }
-        }
-    }
 }

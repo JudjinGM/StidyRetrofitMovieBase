@@ -1,27 +1,23 @@
 package com.example.stidyretrofitmoviebase.presentation.movies
 
-import android.app.Application
+import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.lifecycle.ViewModel
 import com.example.stidyretrofitmoviebase.R
 import com.example.stidyretrofitmoviebase.domain.api.MoviesInteractor
 import com.example.stidyretrofitmoviebase.domain.models.Movie
-import com.example.stidyretrofitmoviebase.ui.movies.models.MoviesState
+import com.example.stidyretrofitmoviebase.presentation.movies.models.MoviesState
 import com.example.stidyretrofitmoviebase.ui.movies.models.ToastState
-import com.example.stidyretrofitmoviebase.utill.Creator
 
 
 class MoviesSearchViewModel(
-    private val moviesInteractor: MoviesInteractor, application: Application
-) : AndroidViewModel(application) {
+    private val moviesInteractor: MoviesInteractor, private val context: Context
+) : ViewModel() {
 
     private val handler = Handler(Looper.getMainLooper())
 
@@ -70,7 +66,7 @@ class MoviesSearchViewModel(
 
     private fun searchRequest(newSearchText: String) {
         if (newSearchText.isNotEmpty()) {
-            renderState(MoviesState.Loading)
+            postState(MoviesState.Loading)
 
             moviesInteractor.searchMovies(newSearchText, object : MoviesInteractor.MoviesConsumer {
                 override fun consume(foundMovies: List<Movie>?, errorMessage: String?) {
@@ -81,36 +77,37 @@ class MoviesSearchViewModel(
 
                     when {
                         errorMessage != null -> {
-                            renderState(
+                            postState(
                                 MoviesState.Error(
-                                    getApplication<Application>().getString(R.string.something_went_wrong),
+                                    context.getString(R.string.something_went_wrong),
                                 )
                             )
                             showToast(errorMessage)
                         }
 
                         movies.isEmpty() -> {
-                            renderState(
+                            postState(
                                 MoviesState.Empty(
-                                    getApplication<Application>().getString(R.string.nothing_found),
+                                    context.getString(R.string.nothing_found),
                                 )
                             )
                         }
 
                         else -> {
-                            renderState(
+                            postState(
                                 MoviesState.Content(
                                     movies = movies,
                                 )
                             )
                         }
+
                     }
                 }
             })
         }
     }
 
-    private fun renderState(state: MoviesState) {
+    private fun postState(state: MoviesState) {
         stateLiveData.postValue(state)
     }
 
@@ -149,14 +146,5 @@ class MoviesSearchViewModel(
     companion object {
         private const val SEARCH_DEBOUNCE_DELAY = 2000L
         private val SEARCH_REQUEST_TOKEN = Any()
-
-        fun getViewModelFactory(): ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                MoviesSearchViewModel(
-                    moviesInteractor = Creator.provideMoviesInteractor(this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as Application),
-                    application = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as Application
-                )
-            }
-        }
     }
 }

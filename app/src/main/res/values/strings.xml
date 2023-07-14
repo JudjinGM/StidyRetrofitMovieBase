@@ -12,4 +12,14 @@
     <string name="something_went_wrong">Something went wrong</string>
     <string name="nothing_found">Nothing found</string>
     <string name="app_name">app name</string>
+    <string name="show_cast">Show cast</string>
+    <string name="directors">Directors</string>
+    <string name="movies">Movies</string>
+    <string name="persons">Persons</string>
+    <string name="help">Help</string>
+    <string name="help_screen_text">IMDB Movie Search</string>
+    <string name="version">version 1.0</string>
+    <string name="developer_name">Developer:\nValiev Ilnur</string>
+
+
 </resources>

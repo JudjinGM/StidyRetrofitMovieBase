@@ -6,11 +6,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import com.example.stidyretrofitmoviebase.databinding.FragmentPosterBinding
-import com.example.stidyretrofitmoviebase.presentation.model.PosterState
 import com.example.stidyretrofitmoviebase.presentation.movieDetail.PosterViewModel
+import com.example.stidyretrofitmoviebase.presentation.movieDetail.models.PosterState
+import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.core.parameter.parametersOf
 
 class PosterFragment : Fragment() {
 
@@ -18,9 +19,11 @@ class PosterFragment : Fragment() {
 
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: PosterViewModel
-
     private lateinit var posterUrl: String
+
+    private val viewModel: PosterViewModel by viewModel {
+        parametersOf(posterUrl)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,10 +39,6 @@ class PosterFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        viewModel = ViewModelProvider(
-            this, PosterViewModel.getViewModelFactory(posterUrl)
-        )[PosterViewModel::class.java]
 
         viewModel.observeState().observe(viewLifecycleOwner) {
             render(it)
