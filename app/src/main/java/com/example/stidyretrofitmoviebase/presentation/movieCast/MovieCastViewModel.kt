@@ -3,10 +3,12 @@ package com.example.stidyretrofitmoviebase.presentation.movieCast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.stidyretrofitmoviebase.domain.api.MoviesInteractor
 import com.example.stidyretrofitmoviebase.domain.models.MovieCast
 import com.example.stidyretrofitmoviebase.presentation.movieCast.models.MovieCastState
 import com.example.stidyretrofitmoviebase.ui.movieCast.MoviesCastRVItem
+import kotlinx.coroutines.launch
 
 class MovieCastViewModel(
     private val movieId: String, private val interactor: MoviesInteractor
@@ -16,16 +18,19 @@ class MovieCastViewModel(
 
     init {
         postState(MovieCastState.Loading)
-
-        interactor.getMovieFullCast(movieId, object : MoviesInteractor.MovieCastConsumer {
-            override fun consume(movieCast: MovieCast?, errorMessage: String?) {
-                if (movieCast != null) {
-                    postState(castUiStateToContent(movieCast))
-                } else {
-                    postState(MovieCastState.Error(errorMessage ?: "Unknown Error"))
-                }
+        viewModelScope.launch {
+            interactor.getMovieFullCast(movieId).collect { pairs ->
+                processResult(pairs.first, pairs.second)
             }
-        })
+        }
+    }
+
+    private fun processResult(movieCast: MovieCast?, errorMessage: String?) {
+        if (movieCast != null) {
+            postState(castUiStateToContent(movieCast))
+        } else {
+            postState(MovieCastState.Error(errorMessage ?: "Unknown Error"))
+        }
     }
 
     private fun castUiStateToContent(cast: MovieCast): MovieCastState {

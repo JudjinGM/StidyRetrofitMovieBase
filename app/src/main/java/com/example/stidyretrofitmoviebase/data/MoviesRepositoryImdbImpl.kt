@@ -15,90 +15,102 @@ import com.example.stidyretrofitmoviebase.domain.models.MovieCast
 import com.example.stidyretrofitmoviebase.domain.models.MovieDetail
 import com.example.stidyretrofitmoviebase.domain.models.Names
 import com.example.stidyretrofitmoviebase.utill.Resource
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 class MoviesRepositoryImdbImpl(
     private val networkClient: NetworkClient,
     private val localStorage: LocalStorage,
     private val movieCastConverter: MovieCastConverter,
 ) : MoviesRepository {
-    override fun searchMovies(expression: String): Resource<List<Movie>> {
+    override fun searchMovies(expression: String): Flow<Resource<List<Movie>>> = flow {
         val response = networkClient.doRequest(MoviesSearchRequest(expression))
-        return when (response.resultCode) {
+        when (response.resultCode) {
             -1 -> {
-                Resource.Error("Проверьте подключение к интернету")
+                emit(Resource.Error("Проверьте подключение к интернету"))
             }
 
             200 -> {
                 val stored = localStorage.getSavedFavorites()
-                Resource.Success((response as MoviesSearchResponse).results.map { it ->
-                    Movie(
-                        id = it.id,
-                        resultType = it.resultType,
-                        image = it.image,
-                        title = it.title,
-                        description = it.description,
-                        inFavorite = stored.contains((it.id))
-                    )
-                })
+                with(response as MoviesSearchResponse) {
+                    val data = results.map {
+                        Movie(
+                            id = it.id,
+                            resultType = it.resultType,
+                            image = it.image,
+                            title = it.title,
+                            description = it.description,
+                            inFavorite = stored.contains((it.id))
+                        )
+                    }
+                    emit(Resource.Success(data))
+                }
             }
 
-            else -> Resource.Error("Ошибка сервера")
+            else -> emit(Resource.Error("Ошибка сервера"))
         }
     }
 
-    override fun getDetails(id: String): Resource<MovieDetail> {
+    override fun getDetails(id: String): Flow<Resource<MovieDetail>> = flow {
         val response = networkClient.doRequest(MovieDetailsRequest(id))
-        return when (response.resultCode) {
-            -1 -> Resource.Error("Проверьте подключение к интернету")
+        when (response.resultCode) {
+            -1 -> emit(Resource.Error("Проверьте подключение к интернету"))
             200 -> with(response as MovieDetailsResponse) {
-                Resource.Success(
-                    MovieDetail(
-                        id,
-                        title,
-                        imDbRating,
-                        year,
-                        countries,
-                        genres,
-                        directors,
-                        writers,
-                        stars,
-                        plot
+                emit(
+                    Resource.Success(
+                        MovieDetail(
+                            id,
+                            title,
+                            imDbRating,
+                            year,
+                            countries,
+                            genres,
+                            directors,
+                            writers,
+                            stars,
+                            plot
+                        )
                     )
                 )
             }
-            else -> Resource.Error("Ошибка сервера")
+
+            else -> emit(Resource.Error("Ошибка сервера"))
         }
     }
 
-    override fun getMovieCast(id: String): Resource<MovieCast> {
+    override fun getMovieCast(id: String): Flow<Resource<MovieCast>> = flow {
         val response = networkClient.doRequest(MoviesCastRequest(id))
-        return when (response.resultCode) {
-            -1 -> Resource.Error("Проверьте подключение к интернету")
+        when (response.resultCode) {
+            -1 -> emit(Resource.Error("Проверьте подключение к интернету"))
             200 ->
-                Resource.Success(
-                    data = movieCastConverter.convert(response as MovieCastResponse)
+                emit(
+                    Resource.Success(
+                        data = movieCastConverter.convert(response as MovieCastResponse)
+                    )
                 )
 
-            else -> Resource.Error("Ошибка сервера")
+            else -> emit(Resource.Error("Ошибка сервера"))
         }
     }
 
-    override fun getNames(namesQuery: String): Resource<List<Names>> {
+    override fun getNames(namesQuery: String): Flow<Resource<List<Names>>> = flow {
         val response = networkClient.doRequest(NamesSearchRequest(namesQuery))
-        return when (response.resultCode) {
-            -1 -> Resource.Error("Проверьте подключение к интернету")
-            200 -> Resource.Success(
-                (response as NamesSearchResponse).results.map { it ->
-                    Names(
-                        description = it.description,
-                        id = it.id,
-                        image = it.image,
-                        resultType = it.resultType,
-                        title = it.title
-                    )
-                })
+        when (response.resultCode) {
+            -1 -> emit(Resource.Error("Проверьте подключение к интернету"))
+            200 -> emit(
+                Resource.Success(
+                    (response as NamesSearchResponse).results.map { it ->
+                        Names(
+                            description = it.description,
+                            id = it.id,
+                            image = it.image,
+                            resultType = it.resultType,
+                            title = it.title
+                        )
+                    })
+            )
 
-            else -> Resource.Error("Ошибка сервера")
+            else -> emit(Resource.Error("Ошибка сервера"))
         }
     }
 

@@ -1,94 +1,76 @@
 package com.example.stidyretrofitmoviebase.presentation.names
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
-import android.os.SystemClock
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.stidyretrofitmoviebase.R
 import com.example.stidyretrofitmoviebase.domain.api.MoviesInteractor
 import com.example.stidyretrofitmoviebase.domain.models.Names
 import com.example.stidyretrofitmoviebase.presentation.names.models.NamesState
+import com.example.stidyretrofitmoviebase.utill.debounce
+import kotlinx.coroutines.launch
 
 class NamesSearchViewModel(
     private val moviesInteractor: MoviesInteractor, private val context: Context
 ) : ViewModel() {
 
-    private val handler = Handler(Looper.getMainLooper())
     private val stateLiveData = MutableLiveData<NamesState>()
-
 
     fun observeState(): LiveData<NamesState> = stateLiveData
 
-    private fun postState(state: NamesState) {
-        stateLiveData.postValue(state)
-    }
-
     private var latestSearchText: String? = null
 
-    override fun onCleared() {
-        handler.removeCallbacksAndMessages(SEARCH_NAMES_REQUEST_TOKEN)
-    }
-
-    fun searchDebounce(changedText: String) {
-        if (latestSearchText == changedText) {
-            return
+    private val namesSearchDebounce =
+        debounce<String>(SEARCH_DEBOUNCE_DELAY, viewModelScope, true) {
+            searchRequest(it)
         }
 
+    fun searchDebounce(changedText: String) {
+        if (this.latestSearchText == changedText) {
+            return
+        }
         this.latestSearchText = changedText
 
-        handler.removeCallbacksAndMessages(SEARCH_NAMES_REQUEST_TOKEN)
-
-        val searchRunnable = Runnable { searchRequest(changedText) }
-
-        val postTime = SystemClock.uptimeMillis() + SEARCH_DEBOUNCE_DELAY
-        handler.postAtTime(
-            searchRunnable,
-            SEARCH_NAMES_REQUEST_TOKEN,
-            postTime,
-        )
+        namesSearchDebounce(changedText)
     }
 
     private fun searchRequest(newSearchText: String) {
         if (newSearchText.isNotEmpty()) {
             postState(NamesState.Loading)
 
-            moviesInteractor.searchNames(newSearchText, object : MoviesInteractor.NamesConsummer {
-                override fun consume(names: List<Names>?, errorMessage: String?) {
-                    val namesList = mutableListOf<Names>()
-
-                    if (names != null) {
-                        namesList.addAll(names)
-                    }
-
-                    when {
-                        errorMessage != null -> {
-                            postState(
-                                NamesState.Error(
-                                    context.getString(R.string.something_went_wrong)
-                                )
-                            )
-                        }
-
-                        namesList.isEmpty() -> {
-                            postState(
-                                NamesState.Empty(
-                                    context.getString(R.string.nothing_found)
-                                )
-                            )
-                        }
-
-                        else -> postState(NamesState.Content(namesList))
-                    }
+            viewModelScope.launch {
+                moviesInteractor.searchNames(newSearchText).collect { pair ->
+                    processResult(pair.first, pair.second)
                 }
-            })
+            }
         }
+    }
+
+    private fun processResult(foundNames: List<Names>?, errorMessage: String?) {
+        val persons = mutableListOf<Names>()
+        if (foundNames != null) {
+            persons.addAll(foundNames)
+        }
+        when {
+            errorMessage != null -> {
+                postState(NamesState.Error(errorMessage))
+            }
+
+            persons.isEmpty() -> {
+                postState(NamesState.Empty(R.string.nothing_found.toString()))
+            }
+
+            else -> postState(NamesState.Content(persons))
+        }
+    }
+
+    private fun postState(state: NamesState) {
+        stateLiveData.postValue(state)
     }
 
     companion object {
         private const val SEARCH_DEBOUNCE_DELAY = 2000L
-        private val SEARCH_NAMES_REQUEST_TOKEN = Any()
     }
 }

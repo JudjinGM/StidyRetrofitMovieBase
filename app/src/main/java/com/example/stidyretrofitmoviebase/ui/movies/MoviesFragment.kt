@@ -1,15 +1,13 @@
 package com.example.stidyretrofitmoviebase.ui.movies
 
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.stidyretrofitmoviebase.R
@@ -19,33 +17,22 @@ import com.example.stidyretrofitmoviebase.presentation.movies.MoviesSearchViewMo
 import com.example.stidyretrofitmoviebase.presentation.movies.models.MoviesState
 import com.example.stidyretrofitmoviebase.ui.movieDetail.DetailsFragment
 import com.example.stidyretrofitmoviebase.ui.movies.models.ToastState
+import com.example.stidyretrofitmoviebase.ui.root.RootActivity
+import com.example.stidyretrofitmoviebase.utill.debounce
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class MoviesFragment : Fragment() {
+class MoviesFragment : androidx.fragment.app.Fragment() {
 
     private var _binding: FragmentMoviesBinding? = null
     private val binding get() = _binding!!
 
-    private var isClickAllowed = true
-
-    private val handler = Handler(Looper.getMainLooper())
+    private lateinit var onMovieClickDebounce: (Movie) -> Unit
 
     private val viewModel: MoviesSearchViewModel by viewModel()
 
-    private val adapter = MoviesAdapter(object : MoviesAdapter.MovieClickListener {
-        override fun onMovieClick(movie: Movie) {
-            if (clickDebounce()) {
-                findNavController().navigate(
-                    R.id.action_moviesFragment_to_detailsFragment,
-                    DetailsFragment.createArgs(movie.id, movie.image)
-                )
-            }
-        }
-
-        override fun onFavoriteToggleClick(movie: Movie) {
-            viewModel.toggleFavorite(movie)
-        }
-    })
+    private var adapter: MoviesAdapter? = null
 
     private var textWatcher: TextWatcher? = null
 
@@ -59,6 +46,28 @@ class MoviesFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        onMovieClickDebounce = debounce<Movie>(
+            CLICK_DEBOUNCE_DELAY,
+            viewLifecycleOwner.lifecycleScope,
+            false
+        ) { movie ->
+            findNavController().navigate(
+                R.id.action_moviesFragment_to_detailsFragment,
+                DetailsFragment.createArgs(movie.id, movie.image)
+            )
+        }
+
+        adapter = MoviesAdapter(object : MoviesAdapter.MovieClickListener {
+            override fun onMovieClick(movie: Movie) {
+                onMovieClickDebounce(movie)
+                (activity as RootActivity).animateBottomNavigationView()
+            }
+
+            override fun onFavoriteToggleClick(movie: Movie) {
+                viewModel.toggleFavorite(movie)
+            }
+        })
 
         binding.moviesList.layoutManager =
             LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
@@ -95,17 +104,9 @@ class MoviesFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         textWatcher?.let { binding.queryInput.removeTextChangedListener(it) }
+        adapter = null
+        binding.moviesList.adapter = null
 
-    }
-
-
-    private fun clickDebounce(): Boolean {
-        val current = isClickAllowed
-        if (isClickAllowed) {
-            isClickAllowed = false
-            handler.postDelayed({ isClickAllowed = true }, CLICK_DEBOUNCE_DELAY)
-        }
-        return current
     }
 
     private fun showLoading() {
@@ -131,9 +132,9 @@ class MoviesFragment : Fragment() {
         binding.placeholderMessage.visibility = View.GONE
         binding.progressBar.visibility = View.GONE
 
-        adapter.movies.clear()
-        adapter.movies.addAll(movies)
-        adapter.notifyDataSetChanged()
+        adapter?.movies?.clear()
+        adapter?.movies?.addAll(movies)
+        adapter?.notifyDataSetChanged()
     }
 
     private fun render(state: MoviesState) {

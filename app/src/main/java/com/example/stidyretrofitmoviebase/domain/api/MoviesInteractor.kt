@@ -4,13 +4,15 @@ import com.example.stidyretrofitmoviebase.domain.models.Movie
 import com.example.stidyretrofitmoviebase.domain.models.MovieCast
 import com.example.stidyretrofitmoviebase.domain.models.MovieDetail
 import com.example.stidyretrofitmoviebase.domain.models.Names
+import kotlinx.coroutines.flow.Flow
 
 interface MoviesInteractor {
-    fun searchMovies(expression: String, consumer: MoviesConsumer)
-    fun getMovieDetail(id: String, consumer: MoviesDetailConsumer)
-    fun getMovieFullCast(id: String, consumer: MovieCastConsumer)
 
-    fun searchNames(namesQuery: String, consumer: NamesConsummer)
+    fun searchMovies(expression: String): Flow<Pair<List<Movie>?, String?>>
+    fun getMovieDetail(id: String): Flow<Pair<MovieDetail?, String?>>
+    fun getMovieFullCast(id: String): Flow<Pair<MovieCast?, String?>>
+
+    fun searchNames(namesQuery: String): Flow<Pair<List<Names>?, String?>>
     fun addMoviesToFavorites(movie: Movie)
     fun removeMovieFromFavorites(movie: Movie)
 
@@ -26,7 +28,7 @@ interface MoviesInteractor {
         fun consume(movieCast: MovieCast?, errorMessage: String?)
     }
 
-    interface NamesConsummer {
+    interface NamesConsumer {
         fun consume(names: List<Names>?, errorMessage: String?)
     }
 }
