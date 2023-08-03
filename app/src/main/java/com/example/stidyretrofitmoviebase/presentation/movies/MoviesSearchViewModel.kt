@@ -1,36 +1,27 @@
 package com.example.stidyretrofitmoviebase.presentation.movies
 
-import android.app.Application
-import android.os.Handler
-import android.os.Looper
-import android.os.SystemClock
-import androidx.lifecycle.*
-import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
+import android.content.Context
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.stidyretrofitmoviebase.R
 import com.example.stidyretrofitmoviebase.domain.api.MoviesInteractor
 import com.example.stidyretrofitmoviebase.domain.models.Movie
-import com.example.stidyretrofitmoviebase.ui.movies.models.MoviesState
+import com.example.stidyretrofitmoviebase.domain.models.Names
+import com.example.stidyretrofitmoviebase.presentation.movies.models.MoviesState
+import com.example.stidyretrofitmoviebase.presentation.names.models.NamesState
 import com.example.stidyretrofitmoviebase.ui.movies.models.ToastState
-import com.example.stidyretrofitmoviebase.utill.Creator
+import com.example.stidyretrofitmoviebase.utill.debounce
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 
-class MoviesSearchViewModel(application: Application) : AndroidViewModel(application) {
+class MoviesSearchViewModel(
+    private val moviesInteractor: MoviesInteractor, private val context: Context
+) : ViewModel() {
 
-    companion object {
-        private const val SEARCH_DEBOUNCE_DELAY = 2000L
-        private val SEARCH_REQUEST_TOKEN = Any()
-
-        fun getViewModelFactory(): ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                MoviesSearchViewModel(this[APPLICATION_KEY] as Application)
-            }
-        }
-    }
-
-    private val moviesInteractor = Creator.provideMoviesInteractor(getApplication<Application>())
-    private val handler = Handler(Looper.getMainLooper())
 
     private val toastState = MutableLiveData<ToastState>(ToastState.None)
     fun observeToastState(): LiveData<ToastState> = toastState
@@ -52,9 +43,11 @@ class MoviesSearchViewModel(application: Application) : AndroidViewModel(applica
 
     private var latestSearchText: String? = null
 
-    override fun onCleared() {
-        handler.removeCallbacksAndMessages(SEARCH_REQUEST_TOKEN)
-    }
+    private val searchMovieDebounce =
+        debounce<String>(SEARCH_DEBOUNCE_DELAY, viewModelScope, true) {
+            searchRequest(it)
+        }
+
 
     fun searchDebounce(changedText: String) {
         if (latestSearchText == changedText) {
@@ -63,67 +56,45 @@ class MoviesSearchViewModel(application: Application) : AndroidViewModel(applica
 
         this.latestSearchText = changedText
 
-        handler.removeCallbacksAndMessages(SEARCH_REQUEST_TOKEN)
-
-        val searchRunnable = Runnable { searchRequest(changedText) }
-
-        val postTime = SystemClock.uptimeMillis() + SEARCH_DEBOUNCE_DELAY
-        handler.postAtTime(
-            searchRunnable,
-            SEARCH_REQUEST_TOKEN,
-            postTime,
-        )
+        searchMovieDebounce(changedText)
     }
 
     private fun searchRequest(newSearchText: String) {
         if (newSearchText.isNotEmpty()) {
-            renderState(MoviesState.Loading)
+            postState(MoviesState.Loading)
 
-            moviesInteractor.searchMovies(newSearchText, object : MoviesInteractor.MoviesConsumer {
-                override fun consume(foundMovies: List<Movie>?, errorMessage: String?) {
-                    val movies = mutableListOf<Movie>()
-                    if (foundMovies != null) {
-                        movies.addAll(foundMovies)
-                    }
-
-                    when {
-                        errorMessage != null -> {
-                            renderState(
-                                MoviesState.Error(
-                                    getApplication<Application>().getString(R.string.something_went_wrong),
-                                )
-                            )
-                            showToast(errorMessage)
-                        }
-
-                        movies.isEmpty() -> {
-                            renderState(
-                                MoviesState.Empty(
-                                    getApplication<Application>().getString(R.string.nothing_found),
-                                )
-                            )
-                        }
-
-                        else -> {
-                            renderState(
-                                MoviesState.Content(
-                                    movies = movies,
-                                )
-                            )
-                        }
-                    }
-
-
+            viewModelScope.launch {
+                moviesInteractor.searchMovies(newSearchText).collect{pairs->
+                    processResult(pairs.first, pairs.second)
                 }
-            })
+            }
         }
     }
 
-    private fun renderState(state: MoviesState) {
+    private fun processResult(foundMovies: List<Movie>?, errorMessage: String?) {
+        val movies = mutableListOf<Movie>()
+        if (foundMovies != null) {
+            movies.addAll(foundMovies)
+        }
+        when {
+            errorMessage != null -> {
+                postState(MoviesState.Error(errorMessage))
+                showToast(errorMessage)
+            }
+
+            movies.isEmpty() -> {
+                postState(MoviesState.Empty(R.string.nothing_found.toString()))
+            }
+
+            else -> postState(MoviesState.Content(movies))
+        }
+    }
+
+    private fun postState(state: MoviesState) {
         stateLiveData.postValue(state)
     }
 
-    fun showToast(message: String) {
+    private fun showToast(message: String) {
         toastState.postValue(ToastState.Show(message))
     }
 
@@ -153,5 +124,9 @@ class MoviesSearchViewModel(application: Application) : AndroidViewModel(applica
                 })
             }
         }
+    }
+
+    companion object {
+        private const val SEARCH_DEBOUNCE_DELAY = 2000L
     }
 }

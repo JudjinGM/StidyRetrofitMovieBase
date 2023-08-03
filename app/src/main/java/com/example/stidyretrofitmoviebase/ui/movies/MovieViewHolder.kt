@@ -1,42 +1,28 @@
 package com.example.stidyretrofitmoviebase.ui.movies
 
 import android.graphics.drawable.Drawable
-import android.view.LayoutInflater
-import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.stidyretrofitmoviebase.R
+import com.example.stidyretrofitmoviebase.databinding.ListItemMovieBinding
 import com.example.stidyretrofitmoviebase.domain.models.Movie
 
 class MovieViewHolder(
-    parent: ViewGroup,
-    private val clickListener: MoviesAdapter.MovieClickListener
-) :
-    RecyclerView.ViewHolder(
-        LayoutInflater.from(parent.context)
-            .inflate(R.layout.list_item_movie, parent, false)
-    ) {
-
-    var cover: ImageView = itemView.findViewById(R.id.cover)
-    var title: TextView = itemView.findViewById(R.id.title)
-    var description: TextView = itemView.findViewById(R.id.description)
-
-    var inFavoriteToggle: ImageView = itemView.findViewById(R.id.favorite)
+    private val binding: ListItemMovieBinding, private val clickListener: MoviesAdapter.MovieClickListener
+) : RecyclerView.ViewHolder(
+    binding.root
+) {
 
     fun bind(movie: Movie) {
-        Glide.with(itemView)
-            .load(movie.image)
-            .into(cover)
+        Glide.with(itemView).load(movie.image).into(binding.cover)
 
-        title.text = movie.title
-        description.text = movie.description
+        binding.title.text = movie.title
+        binding.description.text = movie.description
 
-        inFavoriteToggle.setImageDrawable(getFavoriteToggleDrawable(movie.inFavorite))
+        binding.favorite.setImageDrawable(getFavoriteToggleDrawable(movie.inFavorite))
 
         itemView.setOnClickListener { clickListener.onMovieClick(movie) }
-        inFavoriteToggle.setOnClickListener { clickListener.onFavoriteToggleClick(movie) }
+        binding.favorite.setOnClickListener { clickListener.onFavoriteToggleClick(movie) }
     }
 
 

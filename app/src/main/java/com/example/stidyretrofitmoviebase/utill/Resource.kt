@@ -19,3 +19,4 @@ interface HandleResult<T> {
     fun handleSuccess(data: T?)
     fun handleError(message: String?, data: T?)
 }
+
